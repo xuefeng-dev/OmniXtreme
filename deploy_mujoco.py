@@ -1,5 +1,6 @@
 import sys
 import os
+import re
 import csv
 import time
 import torch
@@ -112,10 +113,55 @@ D_GAINS=np.array([
 
 # Unitree actuator torque-speed envelope per joint (urdf order)
 # The model and parameters are referenced from https://github.com/unitreerobotics/unitree_rl_lab/blob/main/source/unitree_rl_lab/unitree_rl_lab/assets/robots/unitree_actuators.py
+DEFAULT_TORQUE_LIMIT_SCALE = 2.0
 X1_7520_22, X2_7520_22, Y1_7520_22, Y2_7520_22 = 14.5, 22.7, 111.0, 131.0
 X1_7520_14, X2_7520_14, Y1_7520_14, Y2_7520_14 = 22.63, 35.52, 71.0, 83.3
 X1_5020_16, X2_5020_16, Y1_5020_16, Y2_5020_16 = 30.86, 40.13, 24.8, 31.9
 X1_4010_25, X2_4010_25, Y1_4010_25, Y2_4010_25 = 15.3, 24.76, 4.8, 8.6
+
+
+def resolve_torque_limit_scale(xml_path: str) -> float:
+    """按模型解析力矩包络缩放；40kg 变体在默认 2x 基础上再 x2。"""
+    env_scale = os.environ.get("TORQUE_LIMIT_SCALE", "").strip()
+    if env_scale:
+        return float(env_scale)
+    name = os.path.basename(xml_path)
+    if re.search(r"no_hand_40(?:p0)?kg", name):
+        return DEFAULT_TORQUE_LIMIT_SCALE * 2.0
+    return DEFAULT_TORQUE_LIMIT_SCALE
+
+
+def _scaled_y_lists(torque_limit_scale: float):
+    scale = torque_limit_scale
+    y1 = [
+        Y1_7520_22 * scale, Y1_7520_22 * scale, Y1_7520_14 * scale, Y1_7520_22 * scale,
+        Y1_5020_16 * scale, Y1_5020_16 * scale,
+        Y1_7520_14 * scale, Y1_5020_16 * scale, Y1_5020_16 * scale,
+        Y1_7520_22 * scale, Y1_7520_22 * scale, Y1_7520_14 * scale, Y1_7520_22 * scale,
+        Y1_5020_16 * scale, Y1_5020_16 * scale,
+        Y1_5020_16 * scale, Y1_5020_16 * scale, Y1_5020_16 * scale, Y1_5020_16 * scale,
+        Y1_5020_16 * scale, Y1_4010_25 * scale, Y1_4010_25 * scale,
+        Y1_5020_16 * scale, Y1_5020_16 * scale, Y1_5020_16 * scale, Y1_5020_16 * scale,
+        Y1_5020_16 * scale, Y1_4010_25 * scale, Y1_4010_25 * scale,
+    ]
+    y2 = [
+        Y2_7520_22 * scale, Y2_7520_22 * scale, Y2_7520_14 * scale, Y2_7520_22 * scale,
+        Y2_5020_16 * scale, Y2_5020_16 * scale,
+        Y2_7520_22 * scale, Y2_7520_22 * scale, Y2_7520_14 * scale, Y2_7520_22 * scale,
+        Y2_5020_16 * scale, Y2_5020_16 * scale,
+        Y2_7520_14 * scale, Y2_5020_16 * scale, Y2_5020_16 * scale,
+        Y2_5020_16 * scale, Y2_5020_16 * scale, Y2_5020_16 * scale, Y2_5020_16 * scale,
+        Y2_5020_16 * scale, Y2_4010_25 * scale, Y2_4010_25 * scale,
+        Y2_5020_16 * scale, Y2_5020_16 * scale, Y2_5020_16 * scale, Y2_5020_16 * scale,
+        Y2_5020_16 * scale, Y2_4010_25 * scale, Y2_4010_25 * scale,
+    ]
+    return y1, y2
+
+
+TORQUE_LIMIT_SCALE = resolve_torque_limit_scale(
+    os.environ.get("XML_PATH", "robots/g1/no_hand.xml")
+)
+Y1_list, Y2_list = _scaled_y_lists(TORQUE_LIMIT_SCALE)
 
 X1_list = [
     X1_7520_22, X1_7520_22, X1_7520_14, X1_7520_22, X1_5020_16, X1_5020_16,
@@ -131,21 +177,6 @@ X2_list = [
     X2_5020_16, X2_5020_16, X2_5020_16, X2_5020_16, X2_5020_16, X2_4010_25, X2_4010_25,
     X2_5020_16, X2_5020_16, X2_5020_16, X2_5020_16, X2_5020_16, X2_4010_25, X2_4010_25,
 ]
-Y1_list = [
-    Y1_7520_22, Y1_7520_22, Y1_7520_14, Y1_7520_22, Y1_5020_16, Y1_5020_16,
-    Y1_7520_22, Y1_7520_22, Y1_7520_14, Y1_7520_22, Y1_5020_16, Y1_5020_16,
-    Y1_7520_14, Y1_5020_16, Y1_5020_16,
-    Y1_5020_16, Y1_5020_16, Y1_5020_16, Y1_5020_16, Y1_5020_16, Y1_4010_25, Y1_4010_25,
-    Y1_5020_16, Y1_5020_16, Y1_5020_16, Y1_5020_16, Y1_5020_16, Y1_4010_25, Y1_4010_25,
-]
-Y2_list = [
-    Y2_7520_22, Y2_7520_22, Y2_7520_14, Y2_7520_22, Y2_5020_16, Y2_5020_16,
-    Y2_7520_22, Y2_7520_22, Y2_7520_14, Y2_7520_22, Y2_5020_16, Y2_5020_16,
-    Y2_7520_14, Y2_5020_16, Y2_5020_16,
-    Y2_5020_16, Y2_5020_16, Y2_5020_16, Y2_5020_16, Y2_5020_16, Y2_4010_25, Y2_4010_25,
-    Y2_5020_16, Y2_5020_16, Y2_5020_16, Y2_5020_16, Y2_5020_16, Y2_4010_25, Y2_4010_25,
-]
-
 # Joint friction model parameters(urdf order)
 # The model and parameters are referenced from https://github.com/unitreerobotics/unitree_rl_lab/blob/main/source/unitree_rl_lab/unitree_rl_lab/assets/robots/unitree_actuators.py
 Va_7520_22, Fs_7520_22, Fd_7520_22 = 0.01, 2.4, 0.24
@@ -282,7 +313,8 @@ def rot_subtract_frame_transforms(t01: torch.Tensor, q01: torch.Tensor, t02: tor
         q12 = q10
     return None, q12
 class G1():
-    def __init__(self):
+    def __init__(self, torque_limit_scale=DEFAULT_TORQUE_LIMIT_SCALE):
+        self.torque_limit_scale = torque_limit_scale
         self.decimation=5
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
@@ -301,8 +333,9 @@ class G1():
 
         self.X1 = torch.tensor(X1_list, dtype=torch.float32, device=self.device)
         self.X2 = torch.tensor(X2_list, dtype=torch.float32, device=self.device)
-        self.Y1 = torch.tensor(Y1_list, dtype=torch.float32, device=self.device)
-        self.Y2 = torch.tensor(Y2_list, dtype=torch.float32, device=self.device)
+        y1_list, y2_list = _scaled_y_lists(torque_limit_scale)
+        self.Y1 = torch.tensor(y1_list, dtype=torch.float32, device=self.device)
+        self.Y2 = torch.tensor(y2_list, dtype=torch.float32, device=self.device)
       
         # dq=0 neighborhood threshold for envelope selection
         self.v_eps = 1e-2
@@ -385,6 +418,8 @@ class DeployNode():
         if xml_override:
             self.config["xml_path"] = xml_override
             print(f"[DeployNode] XML_PATH override: {xml_override}")
+        self.torque_limit_scale = resolve_torque_limit_scale(self.config["xml_path"])
+        print(f"[DeployNode] Torque limit scale: {self.torque_limit_scale}x")
         # init policy
         self.init_policy()
  
@@ -501,7 +536,8 @@ class DeployNode():
         faulthandler.enable()
 
         # prepare environment
-        self.env = G1()
+        scale = getattr(self, "torque_limit_scale", DEFAULT_TORQUE_LIMIT_SCALE)
+        self.env = G1(torque_limit_scale=scale)
         # Optional FK ONNX (e.g. for arm anchor)
         self.fk_quat_session = None
         fk_quat_path = FK_QUAT_ONNX

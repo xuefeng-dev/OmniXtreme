@@ -2,42 +2,43 @@
     <compiler angle="radian" meshdir="./meshes/g1"/>
     <!-- 放在 </mujoco> 之前 -->
 <actuator>
+  <!-- ctrlrange x2 for heavier-body testing (default scale=2) -->
   <!-- 6 DoF x 2 Legs -->
-  <motor name="left_hip_pitch"   joint="left_hip_pitch_joint"   ctrlrange="-139 139"/>
-  <motor name="left_hip_roll"    joint="left_hip_roll_joint"    ctrlrange="-139 139"/>
-  <motor name="left_hip_yaw"     joint="left_hip_yaw_joint"     ctrlrange="-88 88"/>
-  <motor name="left_knee"        joint="left_knee_joint"        ctrlrange="-139 139"/>
-  <motor name="left_ankle_pitch" joint="left_ankle_pitch_joint" ctrlrange="-35 35"/>
-  <motor name="left_ankle_roll"  joint="left_ankle_roll_joint"  ctrlrange="-35 35"/>
+  <motor name="left_hip_pitch"   joint="left_hip_pitch_joint"   ctrlrange="-278 278"/>
+  <motor name="left_hip_roll"    joint="left_hip_roll_joint"    ctrlrange="-278 278"/>
+  <motor name="left_hip_yaw"     joint="left_hip_yaw_joint"     ctrlrange="-176 176"/>
+  <motor name="left_knee"        joint="left_knee_joint"        ctrlrange="-278 278"/>
+  <motor name="left_ankle_pitch" joint="left_ankle_pitch_joint" ctrlrange="-70 70"/>
+  <motor name="left_ankle_roll"  joint="left_ankle_roll_joint"  ctrlrange="-70 70"/>
 
-  <motor name="right_hip_pitch"   joint="right_hip_pitch_joint"   ctrlrange="-139 139"/>
-  <motor name="right_hip_roll"    joint="right_hip_roll_joint"    ctrlrange="-139 139"/>
-  <motor name="right_hip_yaw"     joint="right_hip_yaw_joint"     ctrlrange="-88 88"/>
-  <motor name="right_knee"        joint="right_knee_joint"        ctrlrange="-139 139"/>
-  <motor name="right_ankle_pitch" joint="right_ankle_pitch_joint" ctrlrange="-35 35"/>
-  <motor name="right_ankle_roll"  joint="right_ankle_roll_joint"  ctrlrange="-35 35"/>
+  <motor name="right_hip_pitch"   joint="right_hip_pitch_joint"   ctrlrange="-278 278"/>
+  <motor name="right_hip_roll"    joint="right_hip_roll_joint"    ctrlrange="-278 278"/>
+  <motor name="right_hip_yaw"     joint="right_hip_yaw_joint"     ctrlrange="-176 176"/>
+  <motor name="right_knee"        joint="right_knee_joint"        ctrlrange="-278 278"/>
+  <motor name="right_ankle_pitch" joint="right_ankle_pitch_joint" ctrlrange="-70 70"/>
+  <motor name="right_ankle_roll"  joint="right_ankle_roll_joint"  ctrlrange="-70 70"/>
 
   <!-- 3 DoF Torso -->
-  <motor name="waist_yaw"   joint="waist_yaw_joint"   ctrlrange="-88 88"/>
-  <motor name="waist_roll"  joint="waist_roll_joint"  ctrlrange="-35 35"/>
-  <motor name="waist_pitch" joint="waist_pitch_joint" ctrlrange="-35 35"/>
+  <motor name="waist_yaw"   joint="waist_yaw_joint"   ctrlrange="-176 176"/>
+  <motor name="waist_roll"  joint="waist_roll_joint"  ctrlrange="-70 70"/>
+  <motor name="waist_pitch" joint="waist_pitch_joint" ctrlrange="-70 70"/>
 
   <!-- 7 DoF x 2 Arms -->
-  <motor name="left_shoulder_pitch" joint="left_shoulder_pitch_joint" ctrlrange="-25 25"/>
-  <motor name="left_shoulder_roll"  joint="left_shoulder_roll_joint"  ctrlrange="-25 25"/>
-  <motor name="left_shoulder_yaw"   joint="left_shoulder_yaw_joint"   ctrlrange="-25 25"/>
-  <motor name="left_elbow"          joint="left_elbow_joint"          ctrlrange="-25 25"/>
-  <motor name="left_wrist_roll"     joint="left_wrist_roll_joint"     ctrlrange="-25 25"/>
-  <motor name="left_wrist_pitch"    joint="left_wrist_pitch_joint"    ctrlrange="-5 5"/>
-  <motor name="left_wrist_yaw"      joint="left_wrist_yaw_joint"      ctrlrange="-5 5"/>
+  <motor name="left_shoulder_pitch" joint="left_shoulder_pitch_joint" ctrlrange="-50 50"/>
+  <motor name="left_shoulder_roll"  joint="left_shoulder_roll_joint"  ctrlrange="-50 50"/>
+  <motor name="left_shoulder_yaw"   joint="left_shoulder_yaw_joint"   ctrlrange="-50 50"/>
+  <motor name="left_elbow"          joint="left_elbow_joint"          ctrlrange="-50 50"/>
+  <motor name="left_wrist_roll"     joint="left_wrist_roll_joint"     ctrlrange="-50 50"/>
+  <motor name="left_wrist_pitch"    joint="left_wrist_pitch_joint"    ctrlrange="-10 10"/>
+  <motor name="left_wrist_yaw"      joint="left_wrist_yaw_joint"      ctrlrange="-10 10"/>
 
-  <motor name="right_shoulder_pitch" joint="right_shoulder_pitch_joint" ctrlrange="-25 25"/>
-  <motor name="right_shoulder_roll"  joint="right_shoulder_roll_joint"  ctrlrange="-25 25"/>
-  <motor name="right_shoulder_yaw"   joint="right_shoulder_yaw_joint"   ctrlrange="-25 25"/>
-  <motor name="right_elbow"          joint="right_elbow_joint"          ctrlrange="-25 25"/>
-  <motor name="right_wrist_roll"     joint="right_wrist_roll_joint"     ctrlrange="-25 25"/>
-  <motor name="right_wrist_pitch"    joint="right_wrist_pitch_joint"    ctrlrange="-5 5"/>
-  <motor name="right_wrist_yaw"      joint="right_wrist_yaw_joint"      ctrlrange="-5 5"/>
+  <motor name="right_shoulder_pitch" joint="right_shoulder_pitch_joint" ctrlrange="-50 50"/>
+  <motor name="right_shoulder_roll"  joint="right_shoulder_roll_joint"  ctrlrange="-50 50"/>
+  <motor name="right_shoulder_yaw"   joint="right_shoulder_yaw_joint"   ctrlrange="-50 50"/>
+  <motor name="right_elbow"          joint="right_elbow_joint"          ctrlrange="-50 50"/>
+  <motor name="right_wrist_roll"     joint="right_wrist_roll_joint"     ctrlrange="-50 50"/>
+  <motor name="right_wrist_pitch"    joint="right_wrist_pitch_joint"    ctrlrange="-10 10"/>
+  <motor name="right_wrist_yaw"      joint="right_wrist_yaw_joint"      ctrlrange="-10 10"/>
 </actuator>
     <default>
         <default class="g1">
