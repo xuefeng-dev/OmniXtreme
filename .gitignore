@@ -3,3 +3,4 @@
 *.zip
 policy/motion.npz
 MUJOCO_LOG.TXT
+logs/

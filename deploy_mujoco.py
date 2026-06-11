@@ -1,11 +1,13 @@
 import sys
 import os
+import csv
 import time
 import torch
 import mujoco
 import mujoco.viewer
 import numpy as np
 import faulthandler
+from pathlib import Path
 from omegaconf import OmegaConf
 
 from residual_policy import OnnxResidualPolicyWrapper, OnnxBasePolicyWrapper  
@@ -19,7 +21,48 @@ RESIDUAL_ONNX="policy/residual_policy.onnx"
 FK_QUAT_ONNX="policy/fk_trt.onnx"
 
 HW_DOF = 29
-VISUAL = True
+VISUAL = False
+
+# 关节名称（与 qpos[7:] / qvel[6:] 顺序一致）
+JOINT_NAMES = [
+    "left_hip_pitch_joint", "left_hip_roll_joint", "left_hip_yaw_joint",
+    "left_knee_joint", "left_ankle_pitch_joint", "left_ankle_roll_joint",
+    "right_hip_pitch_joint", "right_hip_roll_joint", "right_hip_yaw_joint",
+    "right_knee_joint", "right_ankle_pitch_joint", "right_ankle_roll_joint",
+    "waist_yaw_joint", "waist_roll_joint", "waist_pitch_joint",
+    "left_shoulder_pitch_joint", "left_shoulder_roll_joint", "left_shoulder_yaw_joint",
+    "left_elbow_joint", "left_wrist_roll_joint", "left_wrist_pitch_joint", "left_wrist_yaw_joint",
+    "right_shoulder_pitch_joint", "right_shoulder_roll_joint", "right_shoulder_yaw_joint",
+    "right_elbow_joint", "right_wrist_roll_joint", "right_wrist_pitch_joint", "right_wrist_yaw_joint",
+]
+
+
+class JointCsvLogger:
+    """将关节力矩与速度实时写入 CSV。"""
+
+    def __init__(self, csv_path: str):
+        self.path = Path(csv_path)
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self._file = self.path.open("w", newline="", encoding="utf-8")
+        self._writer = csv.writer(self._file)
+        header = ["time"]
+        for name in JOINT_NAMES:
+            header.extend([f"{name}_torque", f"{name}_vel"])
+        self._writer.writerow(header)
+        self._file.flush()
+        print(f"[JointCsvLogger] Logging to: {self.path.resolve()}")
+
+    def log(self, sim_time: float, torques: np.ndarray, velocities: np.ndarray):
+        row = [f"{sim_time:.6f}"]
+        for i in range(HW_DOF):
+            row.extend([f"{torques[i]:.6f}", f"{velocities[i]:.6f}"])
+        self._writer.writerow(row)
+
+    def close(self):
+        if self._file and not self._file.closed:
+            self._file.flush()
+            self._file.close()
+            print(f"[JointCsvLogger] Saved: {self.path.resolve()}")
 
 # Reindex DOF order from BeyondMimic motionlib to URDF definition
 PERM = np.array([0, 3, 6, 9, 13, 17, 1, 4, 7, 10, 14, 18, 2, 5, 8, 11, 15, 19, 21, 23, 25, 27, 12, 16, 20, 22, 24, 26, 28])
@@ -373,6 +416,11 @@ class DeployNode():
         self.init_motion_yaw=0
         self.initial_yaw=0
 
+        self.joint_csv_logger = None
+        joint_log_csv = os.environ.get("JOINT_LOG_CSV", "").strip()
+        if joint_log_csv:
+            self.joint_csv_logger = JointCsvLogger(joint_log_csv)
+
         self.env.init_mujoco_viewer(robot_xml=self.config["xml_path"])
         # Initialize robot pose to reference motion first frame
         motion_res_cur = self.motion_res_buf[0]
@@ -609,7 +657,8 @@ class DeployNode():
         except Exception:
             pass
         
-        while True:
+        try:
+          while True:
             loop_start_time = time.monotonic()
             if self.start_policy:        
                 self.lowlevel_state_mujoco()
@@ -729,11 +778,21 @@ class DeployNode():
                                     self.env.d_gains)
                     self.env.mj_data.ctrl[:] = tau
                     mujoco.mj_step(self.env.mj_model, self.env.mj_data)
+                    if self.joint_csv_logger is not None:
+                        self.joint_csv_logger.log(
+                            self.env.mj_data.time,
+                            tau,
+                            self.env.mj_data.qvel[6:].copy(),
+                        )
                 if self.episode_length_buf+1 >= self._ref_motion_length:
                     self.env.viewer.close()
                     break
                             
-                sys.stdout.flush()                
+                sys.stdout.flush()
+        finally:
+            if self.joint_csv_logger is not None:
+                self.joint_csv_logger.close()
+                self.joint_csv_logger = None
 
 
 if __name__ == "__main__":
