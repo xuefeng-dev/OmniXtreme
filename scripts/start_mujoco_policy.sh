@@ -5,4 +5,7 @@ export DISPLAY=:2
 # 关节力矩/速度 CSV 输出路径（设为空则关闭记录）
 export JOINT_LOG_CSV="${JOINT_LOG_CSV:-logs/joint_telemetry.csv}"
 
+# 可选：切换体重变体模型，例如 40kg
+# export XML_PATH="robots/g1/weight_variants/no_hand_40kg.xml"
+
 python deploy_mujoco.py

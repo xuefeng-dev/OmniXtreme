@@ -381,6 +381,10 @@ class DeployNode():
         self.motion_start_times = torch.zeros(1, dtype=torch.float32, device=self.device, requires_grad=False)
         self.motion_len = torch.zeros(1, dtype=torch.float32, device=self.device, requires_grad=False)
         self.config = OmegaConf.load("configs/config.yaml")
+        xml_override = os.environ.get("XML_PATH", "").strip()
+        if xml_override:
+            self.config["xml_path"] = xml_override
+            print(f"[DeployNode] XML_PATH override: {xml_override}")
         # init policy
         self.init_policy()
  
